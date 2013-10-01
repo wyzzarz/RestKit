@@ -1076,7 +1076,9 @@
 				8F2DFE1E847347368405F3B5 /* Pods-ios.xcconfig */,
 				ED192D1B86AB47D7927731B0 /* Pods-osx.xcconfig */,
 			);
+			indentWidth = 4;
 			sourceTree = "<group>";
+			tabWidth = 4;
 		};
 		25160D1714564E810060A5C5 /* Products */ = {
 			isa = PBXGroup;
