@@ -20,6 +20,16 @@ NSDictionary *RKDictionaryByMergingDictionaryWithDictionary(NSDictionary *dict1,
         if ([obj1 isKindOfClass:[NSDictionary class]] && [obj2 isKindOfClass:[NSDictionary class]]) {
             NSDictionary *mergedSubdict = RKDictionaryByMergingDictionaryWithDictionary(obj1, obj2);
             [mergedDictionary setValue:mergedSubdict forKey:key2];
+        } else if ([obj1 isKindOfClass:[NSArray class]] && [obj2 isKindOfClass:[NSDictionary class]]) {
+            NSMutableArray *mergedArray = [obj1 mutableCopy];
+            for (NSInteger i = 0; i < mergedArray.count; i++) {
+                id obj1 = mergedArray[i];
+                NSDictionary *mergedSubdict = RKDictionaryByMergingDictionaryWithDictionary(obj1, obj2);
+                if (mergedSubdict) {
+                    [mergedArray replaceObjectAtIndex: i withObject: mergedSubdict];
+                }
+            }
+            [mergedDictionary setValue:mergedArray forKey:key2];
         } else {
             [mergedDictionary setValue:obj2 forKey:key2];
         }
