@@ -593,8 +593,22 @@ static NSString *RKMIMETypeFromAFHTTPClientParameterEncoding(AFHTTPClientParamet
                                              path:(NSString *)path
                                        parameters:(NSDictionary *)parameters
 {
+  return [self appropriateObjectRequestOperationWithObject: object
+                                                    method: method
+                                                      path: path
+                                                parameters: parameters
+                                              setupRequest: NULL];
+}
+
+- (id)appropriateObjectRequestOperationWithObject:(id)object
+                                           method:(RKRequestMethod)method
+                                             path:(NSString *)path
+                                       parameters:(NSDictionary *)parameters
+                                     setupRequest:(void(^)(NSMutableURLRequest *request))setupRequest
+{
     RKObjectRequestOperation *operation = nil;
-    NSURLRequest *request = [self requestWithObject:object method:method path:path parameters:parameters];
+    NSMutableURLRequest *request = [self requestWithObject:object method:method path:path parameters:parameters];
+    if (setupRequest) { setupRequest(request); }
     NSDictionary *routingMetadata = nil;
     if (! path) {
         RKRoute *route = [self.router.routeSet routeForObject:object method:method];
@@ -717,6 +731,34 @@ static NSString *RKMIMETypeFromAFHTTPClientParameterEncoding(AFHTTPClientParamet
 {
     NSAssert(object || path, @"Cannot make a request without an object or a path.");
     RKObjectRequestOperation *operation = [self appropriateObjectRequestOperationWithObject:object method:RKRequestMethodGET path:path parameters:parameters];
+    [operation setCompletionBlockWithSuccess:success failure:failure];
+    [self enqueueObjectRequestOperation:operation];
+}
+
+- (void)postObject:(id)object
+              path:(NSString *)path
+        parameters:(NSDictionary *)parameters
+             setup:(id (^)(NSMutableURLRequest *request, id json))setup
+           success:(void (^)(RKObjectRequestOperation *operation, RKMappingResult *mappingResult))success
+           failure:(void (^)(RKObjectRequestOperation *operation, NSError *error))failure
+{
+    NSAssert(object || path, @"Cannot make a request without an object or a path.");
+    RKObjectRequestOperation *operation = [self appropriateObjectRequestOperationWithObject:object method:RKRequestMethodPOST path:path parameters:parameters setupRequest: ^(NSMutableURLRequest *request) {
+        if (setup) {
+            id json = nil;
+            if (self.requestSerializationMIMEType == RKMIMETypeJSON) {
+                json = [NSJSONSerialization JSONObjectWithData: request.HTTPBody options: 0 error: NULL];
+            }
+            id newJson = setup(request, json);
+            if (newJson) {
+                NSError *error = nil;
+                request.HTTPBody = [NSJSONSerialization dataWithJSONObject: newJson options: NSJSONWritingPrettyPrinted error: &error];
+                if (error) {
+                    RKLogError(@"Unable to replace http body with new json: %@", error);
+                }
+            }
+        }
+    }];
     [operation setCompletionBlockWithSuccess:success failure:failure];
     [self enqueueObjectRequestOperation:operation];
 }
