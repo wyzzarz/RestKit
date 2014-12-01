@@ -88,4 +88,6 @@
  */
 - (NSUInteger)count;
 
+- (void)merge:(RKMappingResult *)anotherMappingResult;
+
 @end

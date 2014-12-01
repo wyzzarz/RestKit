@@ -598,6 +598,10 @@ BOOL RKDoesArrayOfResponseDescriptorsContainOnlyEntityMappings(NSArray *response
     [self.responseMapperOperation setWillMapDeserializedResponseBlock:self.willMapDeserializedResponseBlock];
     [self.responseMapperOperation setQueuePriority:[self queuePriority]];    
     __weak __typeof(&*self)weakSelf = self;
+    [self.responseMapperOperation setDidMapDeserializedResponseFragmentBlock:^(id deserializedResponseBodyFragment, NSRange range, NSUInteger totalCount) {
+        [weakSelf saveContext:NULL];
+        if (weakSelf.progressBlock) { weakSelf.progressBlock(deserializedResponseBodyFragment, range, totalCount); }
+    }];
     [self.responseMapperOperation setDidFinishMappingBlock:^(RKMappingResult *mappingResult, NSError *responseMappingError) {
         if ([weakSelf isCancelled]) return completionBlock(mappingResult, responseMappingError);
         

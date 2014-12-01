@@ -180,6 +180,8 @@
  */
 - (void)setWillSaveMappingContextBlock:(void (^)(NSManagedObjectContext *mappingContext))block;
 
+@property (nonatomic, copy) void(^progressBlock)(id fragment, NSRange range, NSInteger totalCount);
+
 @end
 
 /**

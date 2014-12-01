@@ -130,6 +130,7 @@ static dispatch_queue_t RKResponseMapperSerializationQueue() {
 @property (nonatomic, strong, readwrite) NSDictionary *responseMappingsDictionary;
 @property (nonatomic, strong) RKMapperOperation *mapperOperation;
 @property (nonatomic, copy) id (^willMapDeserializedResponseBlock)(id);
+@property (nonatomic, copy) void(^didMapDeserializedResponseFragmentBlock)(id,NSRange,NSUInteger);
 @property (nonatomic, copy) void(^didFinishMappingBlock)(RKMappingResult *, NSError *);
 @end
 
@@ -334,7 +335,28 @@ static NSMutableDictionary *RKRegisteredResponseMapperOperationDataSourceClasses
     }
 
     // Object map the response
-    self.mappingResult = [self performMappingWithObject:parsedBody error:&error];    
+    if ([parsedBody isKindOfClass: NSArray.class]) {
+        RKMappingResult *mappingResult = nil;
+        NSArray *arr = parsedBody;
+        NSRange range = NSMakeRange(0, 10);
+        while (range.location < arr.count) {
+            if (range.location + range.length >= arr.count) { range.length = arr.count - range.location; }
+            NSArray *fragment = [arr subarrayWithRange: range];
+            RKMappingResult *newMappingResult = [self performMappingWithObject: fragment error: &error];
+            if (mappingResult) {
+                [mappingResult merge: newMappingResult];
+            } else {
+                mappingResult = newMappingResult;
+            }
+            range.location += range.length;
+            if (self.didMapDeserializedResponseFragmentBlock) {
+                self.didMapDeserializedResponseFragmentBlock(fragment,range,arr.count);
+            }
+        }
+        self.mappingResult = mappingResult;
+    } else {
+        self.mappingResult = [self performMappingWithObject:parsedBody error:&error];
+    }
     
     // If the response is a client error return either the mapping error or the mapped result to the caller as the error
     if (isErrorStatusCode) {

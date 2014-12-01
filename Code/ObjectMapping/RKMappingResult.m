@@ -84,4 +84,19 @@
     return [[self array] count];
 }
 
+- (void)merge:(RKMappingResult *)anotherMappingResult
+{
+    NSMutableDictionary *newDict = [self.keyPathToMappedObjects mutableCopy];
+    NSDictionary *anotherDict = anotherMappingResult.keyPathToMappedObjects;
+    [anotherDict enumerateKeysAndObjectsUsingBlock: ^(id key, id obj, BOOL *stop) {
+        id oldObj = newDict[key];
+        if ([obj isKindOfClass: NSArray.class]) {
+            NSMutableArray *newArr = [(NSArray*)oldObj mutableCopy];
+            [newArr addObjectsFromArray: obj];
+            newDict[key] = [newArr copy];
+        }
+    }];
+    self.keyPathToMappedObjects = [newDict copy];
+}
+
 @end

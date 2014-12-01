@@ -177,6 +177,8 @@
  */
 - (void)setWillMapDeserializedResponseBlock:(id (^)(id deserializedResponseBody))block;
 
+- (void)setDidMapDeserializedResponseFragmentBlock:(void(^)(id deserializedResponseBodyFragment, NSRange range, NSUInteger totalCount))block;
+
 /**
  Sets a block to be executed when the response mapper operation has completed its mapping activities. This method is distinct from the `completionBlock` because it is invoked while the operation is still executing. This block is guaranteed to be called even if the receiver is cancelled before it has been started.
  
