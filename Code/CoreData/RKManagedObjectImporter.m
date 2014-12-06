@@ -128,7 +128,8 @@
     NSPersistentStore *persistentStore = [persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
                                                                                   configuration:nil
                                                                                             URL:storeURL
-                                                                                        options:nil error:error];
+                                                                                        options:@{NSSQLitePragmasOption:@{@"journal_mode":@"DELETE"},NSSQLitePragmasOption: @{@"journal_mode": @"DELETE"}}
+                                                                                          error:error];
     if (! persistentStore) {
         return nil;
     }
