@@ -103,7 +103,11 @@ static NSSet *RKSetOfManagedObjectIDsFromManagedObjectContextDidSaveNotification
     NSAssert([notification object] == self.observedContext, @"Received Managed Object Context Did Save Notification for Unexpected Context: %@", [notification object]);
     if (! [self.objectIDsFromChildDidSaveNotification isEqual:RKSetOfManagedObjectIDsFromManagedObjectContextDidSaveNotification(notification)]) {
         [self.mergeContext performBlock:^{
-            [self.mergeContext mergeChangesFromContextDidSaveNotification:notification];
+            @try {
+                [self.mergeContext mergeChangesFromContextDidSaveNotification:notification];
+            }
+            @catch (NSException *exception) { }
+            @finally { }
         }];
     } else {
         RKLogDebug(@"Skipping merge of `NSManagedObjectContextDidSaveNotification`: the save event originated from the mergeContext and thus no save is necessary.");
